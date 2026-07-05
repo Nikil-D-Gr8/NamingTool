@@ -54,10 +54,12 @@ function initFormPersistence() {
                 custom.value = saved[f + '_custom'];
             }
         });
-        // Restore group
-        const groupSelect = document.getElementById('id_group');
-        if (groupSelect && saved.group) {
-            groupSelect.value = saved.group;
+        // Restore groups (multi-select)
+        const groupsSelect = document.getElementById('id_groups');
+        if (groupsSelect && saved.groups && Array.isArray(saved.groups)) {
+            Array.from(groupsSelect.options).forEach(opt => {
+                opt.selected = saved.groups.includes(opt.value);
+            });
         }
         // Restore instance
         if (instanceInput && saved.instance) {
@@ -79,8 +81,10 @@ function initFormPersistence() {
     // --- Save on every change ---
     function saveDraft() {
         const draft = {};
-        const groupSelect = document.getElementById('id_group');
-        if (groupSelect) draft.group = groupSelect.value;
+        const groupsSelect = document.getElementById('id_groups');
+        if (groupsSelect) {
+            draft.groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
+        }
         
         fields.forEach(f => {
             const select = document.getElementById('id_' + f);
@@ -101,8 +105,8 @@ function initFormPersistence() {
     }
 
     // Listen on all inputs
-    const groupSelect = document.getElementById('id_group');
-    if (groupSelect) groupSelect.addEventListener('change', saveDraft);
+    const groupsSelect = document.getElementById('id_groups');
+    if (groupsSelect) groupsSelect.addEventListener('change', saveDraft);
     fields.forEach(f => {
         const select = document.getElementById('id_' + f);
         const custom = document.getElementById('id_' + f + '_custom');

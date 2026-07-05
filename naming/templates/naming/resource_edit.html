@@ -17,7 +17,11 @@
         <div class="form-errors">{% for error in form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}</div>
         {% endif %}
         <div class="form-grid">
-            <div class="form-group form-group-full"><label class="form-label">Resource Group</label>{{ form.group }}</div>
+            <div class="form-group form-group-full">
+                <label class="form-label">Resource Groups</label>
+                <div class="text-muted" style="font-size: 0.8rem; margin-top: -0.2rem; margin-bottom: 0.2rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</div>
+                {{ form.groups }}
+            </div>
             <div class="form-group"><label class="form-label">Owner</label>{{ form.owner }}{{ form.owner_custom }}</div>
             <div class="form-group"><label class="form-label">Provider</label>{{ form.provider }}{{ form.provider_custom }}</div>
             <div class="form-group"><label class="form-label">Environment</label>{{ form.environment }}{{ form.environment_custom }}</div>

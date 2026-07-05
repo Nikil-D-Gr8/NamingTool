@@ -9,10 +9,14 @@
         <div>
             <span class="rid-badge rid-badge-lg">{{ resource.rid }}</span>
             <h1 style="margin-top: 0.5rem;"><code class="resource-name-lg">{{ resource.name }}</code></h1>
-            <a href="{% url 'group_detail' resource.group.pk %}" class="group-badge group-badge-lg" style="--group-color: {{ resource.group.color }}; margin-top: 0.5rem; display: inline-flex;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                {{ resource.group.name }}
-            </a>
+            <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% for group in resource.groups.all %}
+                <a href="{% url 'group_detail' group.pk %}" class="group-badge group-badge-lg" style="--group-color: {{ group.color }}; display: inline-flex;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    {{ group.name }}
+                </a>
+                {% endfor %}
+            </div>
         </div>
         <div class="page-actions">
             <a href="{% url 'resource_edit' resource.pk %}" class="btn btn-ghost">
@@ -85,8 +89,14 @@
                 <dd>{{ resource.rid }}</dd>
             </div>
             <div class="detail-row">
-                <dt>Resource Group</dt>
-                <dd><a href="{% url 'group_detail' resource.group.pk %}" class="group-badge" style="--group-color: {{ resource.group.color }}">{{ resource.group.name }}</a></dd>
+                <dt>Resource Groups</dt>
+                <dd>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                        {% for group in resource.groups.all %}
+                        <a href="{% url 'group_detail' group.pk %}" class="group-badge" style="--group-color: {{ group.color }}">{{ group.name }}</a>
+                        {% endfor %}
+                    </div>
+                </dd>
             </div>
             <div class="detail-row">
                 <dt>Created</dt>
@@ -106,12 +116,11 @@
     </div>
 </div>
 
-<!-- Related resources in the same group -->
+<!-- Related resources in the same groups -->
 {% if siblings %}
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header-row">
-        <h2 class="card-title">Other resources in "{{ resource.group.name }}"</h2>
-        <a href="{% url 'group_detail' resource.group.pk %}" class="btn btn-ghost btn-sm">View all →</a>
+        <h2 class="card-title">Other resources in related groups</h2>
     </div>
     <div class="table-wrapper">
         <table class="data-table">

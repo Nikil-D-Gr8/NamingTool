@@ -28,11 +28,12 @@
         {% endif %}
 
         <div class="form-grid">
-            <!-- Resource Group (full width) -->
-            <div class="form-group form-group-full" id="group-group">
-                <label class="form-label" for="id_group">Resource Group</label>
-                {{ form.group }}
-                {% if form.group.errors %}<span class="field-error">{{ form.group.errors.0 }}</span>{% endif %}
+            <!-- Resource Groups (full width) -->
+            <div class="form-group form-group-full" id="group-groups">
+                <label class="form-label" for="id_groups">Resource Groups (select one or more)</label>
+                <div class="text-muted" style="font-size: 0.8rem; margin-top: -0.2rem; margin-bottom: 0.4rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</div>
+                {{ form.groups }}
+                {% if form.groups.errors %}<span class="field-error">{{ form.groups.errors.0 }}</span>{% endif %}
             </div>
 
             <!-- Owner -->

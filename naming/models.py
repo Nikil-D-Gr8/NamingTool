@@ -44,12 +44,11 @@ class Resource(models.Model):
     # Internal tracking ID — auto-incremented, never changes
     internal_id = models.AutoField(primary_key=True)
 
-    # --- Resource Group ---
-    group = models.ForeignKey(
+    # --- Resource Groups ---
+    groups = models.ManyToManyField(
         ResourceGroup,
-        on_delete=models.PROTECT,
         related_name="resources",
-        help_text="The resource group this resource belongs to.",
+        help_text="The resource groups this resource belongs to (at least one).",
     )
 
     # --- Identity fields (these compose the canonical name) ---

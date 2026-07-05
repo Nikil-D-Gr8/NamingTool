@@ -52,7 +52,13 @@
                 <tr class="table-row-link" onclick="window.location='{% url 'resource_detail' r.pk %}'">
                     <td><span class="rid-badge">{{ r.rid }}</span></td>
                     <td><code class="resource-name">{{ r.name }}</code></td>
-                    <td><span class="group-badge" style="--group-color: {{ r.group.color }}">{{ r.group.name }}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                            {% for group in r.groups.all %}
+                            <span class="group-badge" style="--group-color: {{ group.color }}; padding: 0.1rem 0.4rem; font-size: 0.7rem;">{{ group.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
                     <td><span class="type-badge">{{ r.resource_type }}</span></td>
                     <td><span class="env-badge env-{{ r.environment }}">{{ r.environment }}</span></td>
                     <td class="text-muted">{{ r.created_at|date:"M d" }}</td>

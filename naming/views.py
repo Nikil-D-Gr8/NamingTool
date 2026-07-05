@@ -30,7 +30,7 @@ def dashboard(request):
     )
 
     # Recent resources
-    recent = resources.select_related("group")[:10]
+    recent = resources.prefetch_related("groups")[:10]
 
     context = {
         "total": total,
@@ -46,7 +46,7 @@ def dashboard(request):
 @login_required
 def resource_list(request):
     """Filterable list of all resources."""
-    resources = Resource.objects.select_related("group").all()
+    resources = Resource.objects.prefetch_related("groups").all()
 
     # Simple search
     q = request.GET.get("q", "").strip()
@@ -58,8 +58,9 @@ def resource_list(request):
             | Q(purpose__icontains=q)
             | Q(environment__icontains=q)
             | Q(notes__icontains=q)
-            | Q(group__name__icontains=q)
-        )
+            | Q(tags__icontains=q)
+            | Q(groups__name__icontains=q)
+        ).distinct()
 
     # Filters
     for field in ["owner", "provider", "environment", "resource_type"]:
@@ -70,7 +71,7 @@ def resource_list(request):
     # Group filter
     group_id = request.GET.get("group", "").strip()
     if group_id:
-        resources = resources.filter(group_id=group_id)
+        resources = resources.filter(groups__id=group_id)
 
     context = {
         "resources": resources,
@@ -95,6 +96,7 @@ def resource_create(request):
             except json.JSONDecodeError:
                 resource.tags = {}
             resource.save()
+            form.save_m2m()
             return redirect("resource_detail", pk=resource.pk)
     else:
         form = ResourceForm()
@@ -109,9 +111,9 @@ def resource_create(request):
 @login_required
 def resource_detail(request, pk):
     """View a single resource's details."""
-    resource = get_object_or_404(Resource.objects.select_related("group"), pk=pk)
-    # Get sibling resources in the same group
-    siblings = resource.group.resources.exclude(pk=resource.pk)[:10]
+    resource = get_object_or_404(Resource.objects.prefetch_related("groups"), pk=pk)
+    # Get sibling resources in the same groups
+    siblings = Resource.objects.filter(groups__in=resource.groups.all()).exclude(pk=resource.pk).distinct()[:10]
     return render(request, "naming/resource_detail.html", {
         "resource": resource,
         "siblings": siblings,
@@ -132,6 +134,7 @@ def resource_edit(request, pk):
             except json.JSONDecodeError:
                 pass
             resource.save()
+            form.save_m2m()
             return redirect("resource_detail", pk=resource.pk)
     else:
         form = ResourceForm(instance=resource)

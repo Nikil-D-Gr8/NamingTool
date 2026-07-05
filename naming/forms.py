@@ -51,7 +51,7 @@ class ResourceForm(forms.ModelForm):
 
     class Meta:
         model = Resource
-        fields = ["group", "owner", "provider", "environment", "resource_type", "purpose", "instance", "notes"]
+        fields = ["groups", "owner", "provider", "environment", "resource_type", "purpose", "instance", "notes"]
         widgets = {
             "instance": forms.NumberInput(attrs={
                 "class": "form-input", "min": 1, "max": 999, "value": 1,
@@ -64,14 +64,11 @@ class ResourceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Resource Group dropdown
-        self.fields["group"].widget = forms.Select(
-            choices=[("", "Select resource group…")] + [
-                (g.pk, g.name) for g in ResourceGroup.objects.all()
-            ],
-            attrs={"class": "form-select", "id": "id_group"},
+        # Resource Groups multiselect
+        self.fields["groups"].widget = forms.SelectMultiple(
+            choices=[(g.pk, g.name) for g in ResourceGroup.objects.all()],
+            attrs={"class": "form-select", "id": "id_groups", "style": "height: 120px;"},
         )
-        self.fields["group"].empty_label = None
 
         # Build dropdown choices dynamically from vocabulary.yaml
         custom_option = [("__custom__", "✏️ Custom…")]
