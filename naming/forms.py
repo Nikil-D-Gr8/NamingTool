@@ -62,11 +62,16 @@ class ResourceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
         # Resource Groups multiselect
+        group_choices = []
+        if user:
+            group_choices = [(g.pk, g.name) for g in ResourceGroup.objects.filter(user=user)]
+
         self.fields["groups"].widget = forms.SelectMultiple(
-            choices=[(g.pk, g.name) for g in ResourceGroup.objects.all()],
+            choices=group_choices,
             attrs={"class": "form-select", "id": "id_groups", "style": "height: 120px;"},
         )
 

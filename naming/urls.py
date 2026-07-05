@@ -15,4 +15,5 @@ urlpatterns = [
     path("groups/<int:pk>/delete/", views.group_delete, name="group_delete"),
     path("vocabulary/", views.vocabulary_manage, name="vocabulary_manage"),
     path("api/next-instance/", views.api_next_instance, name="api_next_instance"),
+    path("accounts/register/", views.register, name="register"),
 ]

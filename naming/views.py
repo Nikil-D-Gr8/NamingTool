@@ -2,18 +2,35 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 from .models import Resource, ResourceGroup
 from .forms import ResourceForm, ResourceGroupForm
 from .vocab import get_vocab, get_choices, get_purpose_flat, get_tag_suggestions, save_vocab
 import json
 
+import json
+
+
+def register(request):
+    """Register a new user account."""
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("dashboard")
+    else:
+        form = UserCreationForm()
+    return render(request, "registration/register.html", {"form": form})
+
 
 @login_required
 def dashboard(request):
     """Main dashboard with stats and recent resources."""
-    resources = Resource.objects.all()
+    resources = Resource.objects.filter(user=request.user)
     total = resources.count()
-    groups = ResourceGroup.objects.annotate(count=Count("resources"))
+    groups = ResourceGroup.objects.filter(user=request.user).annotate(count=Count("resources"))
 
     # Stats by resource type (top 8)
     by_type = (
@@ -46,7 +63,7 @@ def dashboard(request):
 @login_required
 def resource_list(request):
     """Filterable list of all resources."""
-    resources = Resource.objects.prefetch_related("groups").all()
+    resources = Resource.objects.filter(user=request.user).prefetch_related("groups").all()
 
     # Simple search
     q = request.GET.get("q", "").strip()
@@ -77,7 +94,7 @@ def resource_list(request):
         "resources": resources,
         "q": q,
         "vocab": get_vocab(),
-        "groups": ResourceGroup.objects.all(),
+        "groups": ResourceGroup.objects.filter(user=request.user),
     }
     return render(request, "naming/resource_list.html", context)
 
@@ -86,9 +103,10 @@ def resource_list(request):
 def resource_create(request):
     """Create a new resource."""
     if request.method == "POST":
-        form = ResourceForm(request.POST)
+        form = ResourceForm(request.POST, user=request.user)
         if form.is_valid():
             resource = form.save(commit=False)
+            resource.user = request.user
             # Parse tags from the hidden JSON field
             tags_json = request.POST.get("tags_json", "{}")
             try:
@@ -99,7 +117,7 @@ def resource_create(request):
             form.save_m2m()
             return redirect("resource_detail", pk=resource.pk)
     else:
-        form = ResourceForm()
+        form = ResourceForm(user=request.user)
 
     context = {
         "form": form,
@@ -111,9 +129,9 @@ def resource_create(request):
 @login_required
 def resource_detail(request, pk):
     """View a single resource's details."""
-    resource = get_object_or_404(Resource.objects.prefetch_related("groups"), pk=pk)
+    resource = get_object_or_404(Resource.objects.filter(user=request.user).prefetch_related("groups"), pk=pk)
     # Get sibling resources in the same groups
-    siblings = Resource.objects.filter(groups__in=resource.groups.all()).exclude(pk=resource.pk).distinct()[:10]
+    siblings = Resource.objects.filter(user=request.user, groups__in=resource.groups.all()).exclude(pk=resource.pk).distinct()[:10]
     return render(request, "naming/resource_detail.html", {
         "resource": resource,
         "siblings": siblings,
@@ -123,9 +141,9 @@ def resource_detail(request, pk):
 @login_required
 def resource_edit(request, pk):
     """Edit an existing resource."""
-    resource = get_object_or_404(Resource, pk=pk)
+    resource = get_object_or_404(Resource, pk=pk, user=request.user)
     if request.method == "POST":
-        form = ResourceForm(request.POST, instance=resource)
+        form = ResourceForm(request.POST, instance=resource, user=request.user)
         if form.is_valid():
             resource = form.save(commit=False)
             tags_json = request.POST.get("tags_json", "{}")
@@ -137,7 +155,7 @@ def resource_edit(request, pk):
             form.save_m2m()
             return redirect("resource_detail", pk=resource.pk)
     else:
-        form = ResourceForm(instance=resource)
+        form = ResourceForm(instance=resource, user=request.user)
 
     context = {
         "form": form,
@@ -151,7 +169,7 @@ def resource_edit(request, pk):
 @login_required
 def resource_delete(request, pk):
     """Delete a resource."""
-    resource = get_object_or_404(Resource, pk=pk)
+    resource = get_object_or_404(Resource, pk=pk, user=request.user)
     if request.method == "POST":
         resource.delete()
         return redirect("resource_list")
@@ -170,7 +188,7 @@ def api_next_instance(request):
     purpose = request.GET.get("purpose", "")
 
     existing = Resource.objects.filter(
-        owner=owner, provider=provider, environment=env,
+        user=request.user, owner=owner, provider=provider, environment=env,
         resource_type=rt, purpose=purpose,
     ).values_list("instance", flat=True)
 
@@ -218,7 +236,7 @@ def vocabulary_manage(request):
 @login_required
 def group_list(request):
     """List all resource groups with their resource counts."""
-    groups = ResourceGroup.objects.annotate(count=Count("resources")).order_by("name")
+    groups = ResourceGroup.objects.filter(user=request.user).annotate(count=Count("resources")).order_by("name")
     return render(request, "naming/group_list.html", {"groups": groups})
 
 
@@ -228,7 +246,9 @@ def group_create(request):
     if request.method == "POST":
         form = ResourceGroupForm(request.POST)
         if form.is_valid():
-            form.save()
+            group = form.save(commit=False)
+            group.user = request.user
+            group.save()
             return redirect("group_list")
     else:
         form = ResourceGroupForm()
@@ -238,7 +258,7 @@ def group_create(request):
 @login_required
 def group_detail(request, pk):
     """View a resource group and all its resources."""
-    group = get_object_or_404(ResourceGroup, pk=pk)
+    group = get_object_or_404(ResourceGroup, pk=pk, user=request.user)
     resources = group.resources.all()
     return render(request, "naming/group_detail.html", {"group": group, "resources": resources})
 
@@ -246,7 +266,7 @@ def group_detail(request, pk):
 @login_required
 def group_edit(request, pk):
     """Edit a resource group."""
-    group = get_object_or_404(ResourceGroup, pk=pk)
+    group = get_object_or_404(ResourceGroup, pk=pk, user=request.user)
     if request.method == "POST":
         form = ResourceGroupForm(request.POST, instance=group)
         if form.is_valid():
@@ -260,7 +280,7 @@ def group_edit(request, pk):
 @login_required
 def group_delete(request, pk):
     """Delete a resource group (only if empty)."""
-    group = get_object_or_404(ResourceGroup, pk=pk)
+    group = get_object_or_404(ResourceGroup, pk=pk, user=request.user)
     if request.method == "POST":
         if group.resources.exists():
             from django.contrib import messages

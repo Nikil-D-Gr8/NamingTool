@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class ResourceGroup(models.Model):
@@ -8,8 +9,8 @@ class ResourceGroup(models.Model):
     Examples: "Blog Stack", "Minecraft Server", "Core Network", etc.
     Every resource must belong to exactly one group.
     """
-
-    name = models.CharField(max_length=100, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="resource_groups")
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True, default="")
     color = models.CharField(
         max_length=7,
@@ -21,6 +22,7 @@ class ResourceGroup(models.Model):
 
     class Meta:
         ordering = ["name"]
+        unique_together = [["user", "name"]]
 
     def __str__(self):
         return self.name
@@ -43,6 +45,9 @@ class Resource(models.Model):
 
     # Internal tracking ID — auto-incremented, never changes
     internal_id = models.AutoField(primary_key=True)
+
+    # --- User Ownership ---
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="resources")
 
     # --- Resource Groups ---
     groups = models.ManyToManyField(
@@ -70,7 +75,7 @@ class Resource(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["owner", "provider", "environment", "resource_type", "purpose", "instance"],
+                fields=["user", "owner", "provider", "environment", "resource_type", "purpose", "instance"],
                 name="unique_resource_identity",
             )
         ]
