@@ -1,0 +1,36 @@
+{% extends "naming/base.html" %}
+{% block title %}Resource Groups — NamingTool{% endblock %}
+{% block nav_groups %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <h1>Resource Groups</h1>
+            <p class="page-subtitle">Organize your resources into logical groups</p>
+        </div>
+        <a href="{% url 'group_create' %}" class="btn btn-primary">+ New Group</a>
+    </div>
+</div>
+
+{% if groups %}
+<div class="group-grid">
+    {% for g in groups %}
+    <a href="{% url 'group_detail' g.pk %}" class="group-card" style="--group-color: {{ g.color }}">
+        <div class="group-card-color" style="background: {{ g.color }}"></div>
+        <div class="group-card-info">
+            <span class="group-card-name">{{ g.name }}</span>
+            {% if g.description %}<span class="group-card-desc">{{ g.description|truncatewords:12 }}</span>{% endif %}
+            <span class="group-card-count">{{ g.count }} resource{{ g.count|pluralize }}</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <p>No resource groups yet. <a href="{% url 'group_create' %}">Create your first one</a>.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

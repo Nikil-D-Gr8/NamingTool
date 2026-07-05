@@ -1,0 +1,78 @@
+{% extends "naming/base.html" %}
+{% load naming_tags %}
+{% block title %}Vocabulary — NamingTool{% endblock %}
+{% block nav_vocab %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Vocabulary</h1>
+    <p class="page-subtitle">Manage dropdown options — add new codes here or edit <code>naming/vocabulary.yaml</code> directly</p>
+</div>
+
+<!-- Add new entry -->
+<div class="card">
+    <h2 class="card-title">Add New Entry</h2>
+    <form method="post" class="vocab-add-form">
+        {% csrf_token %}
+        <div class="form-grid form-grid-4">
+            <div class="form-group">
+                <label class="form-label">Field</label>
+                <select name="field" class="form-select" id="vocabField" required>
+                    <option value="">Select…</option>
+                    <option value="owner">Owner</option>
+                    <option value="provider">Provider</option>
+                    <option value="environment">Environment</option>
+                    <option value="resource_type">Resource Type</option>
+                    <option value="purpose">Purpose</option>
+                </select>
+            </div>
+            <div class="form-group" id="vocabCategoryGroup" style="display:none;">
+                <label class="form-label">Category</label>
+                <input type="text" name="category" class="form-input" placeholder="e.g. games">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Code</label>
+                <input type="text" name="code" class="form-input" placeholder="e.g. hom" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Label</label>
+                <input type="text" name="label" class="form-input" placeholder="e.g. Home Lab" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-top:1rem;">Add to Vocabulary</button>
+    </form>
+</div>
+
+<!-- Current vocabulary -->
+{% for field_name, field_label in field_list %}
+<div class="card" style="margin-top:1.5rem;">
+    <h2 class="card-title">{{ field_label }}</h2>
+    {% with entries=vocab|get_field:field_name %}
+    {% if entries %}
+    <div class="vocab-grid">
+        {% for code, label in entries.items %}
+        {% if label is not None and label.items %}
+        <!-- Nested (purpose) -->
+        <div class="vocab-category">
+            <h3 class="vocab-cat-title">{{ code|title }}</h3>
+            {% for subcode, sublabel in label.items %}
+            <div class="vocab-chip"><span class="vocab-code">{{ subcode }}</span> {{ sublabel }}</div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="vocab-chip"><span class="vocab-code">{{ code }}</span> {{ label }}</div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('vocabField').addEventListener('change', function() {
+    document.getElementById('vocabCategoryGroup').style.display = this.value === 'purpose' ? '' : 'none';
+});
+</script>
+{% endblock %}

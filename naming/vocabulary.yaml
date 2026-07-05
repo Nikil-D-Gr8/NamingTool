@@ -1,0 +1,214 @@
+# ============================================================
+# Resource Naming Vocabulary
+# ============================================================
+# Edit this file to add/remove options from the dropdowns.
+# After editing, restart the Django server (or reload the page)
+# to see the changes — no migrations needed.
+# ============================================================
+
+owner:
+  nik: Nikil
+  fam: Family
+  lab: Lab
+  shr: Shared
+
+provider:
+  hom: Home Lab
+  oci: Oracle Cloud
+  aws: AWS
+  azr: Azure
+  gcp: Google Cloud
+  het: Hetzner
+  do: DigitalOcean
+  lin: Linode
+
+environment:
+  prd: Production
+  dev: Development
+  tst: Testing
+  stg: Staging
+  lab: Lab
+  poc: Proof of Concept
+
+resource_type:
+  # Compute
+  vm: Virtual Machine
+  ct: Container
+  pod: Pod
+  k8s: Kubernetes Cluster
+  node: Node
+  host: Host
+  # Networking
+  net: Network
+  subnet: Subnet
+  vcn: Virtual Cloud Network
+  vpc: Virtual Private Cloud
+  lb: Load Balancer
+  proxy: Proxy
+  fw: Firewall
+  vpn: VPN
+  gw: Gateway
+  dns: DNS
+  router: Router
+  switch: Switch
+  # Storage
+  disk: Disk
+  vol: Volume
+  bucket: Bucket
+  # Data
+  db: Database
+  cache: Cache
+  mq: Message Queue
+  # Security
+  cert: Certificate
+  secret: Secret
+  user: User
+  group: Group
+  policy: Policy
+  # Software
+  repo: Repository
+  app: Application
+  svc: Service
+  job: Job
+  cron: Cron Job
+  game: Game
+
+purpose:
+  infrastructure:
+    core: Core
+    edge: Edge
+    storage: Storage
+    backup: Backup
+    monitor: Monitoring
+    logging: Logging
+    identity: Identity
+    proxy: Proxy
+    dns: DNS
+    auth: Authentication
+    mail: Mail
+  applications:
+    blog: Blog
+    wiki: Wiki
+    paste: Paste
+    docs: Documentation
+    git: Git
+    forgejo: Forgejo
+    gitea: Gitea
+    nextcloud: Nextcloud
+    immich: Immich
+    jellyfin: Jellyfin
+    vaultwarden: Vaultwarden
+  games:
+    minecraft: Minecraft
+    terraria: Terraria
+    factorio: Factorio
+    valheim: Valheim
+    palworld: Palworld
+  developer:
+    registry: Registry
+    ci: CI/CD
+    runner: Runner
+    builder: Builder
+    artifacts: Artifacts
+  ai:
+    ollama: Ollama
+    openwebui: Open WebUI
+    comfy: ComfyUI
+  databases:
+    postgres: PostgreSQL
+    mysql: MySQL
+    redis: Redis
+    mongo: MongoDB
+
+tags:
+  # These are suggested tag keys shown in the tag editor
+  ownership:
+    - owner
+    - team
+    - department
+    - contact
+    - email
+  business:
+    - purpose
+    - description
+    - project
+    - repository
+    - documentation
+  infrastructure:
+    - provider
+    - region
+    - availability-zone
+    - datacenter
+    - rack
+    - host
+    - cluster
+  lifecycle:
+    - environment
+    - created
+    - created-by
+    - managed-by
+    - last-modified
+  cost:
+    - budget
+    - cost-center
+    - monthly-cost
+    - billing-account
+  security:
+    - public
+    - private
+    - internet-facing
+    - classification
+    - backup
+    - encrypted
+  os:
+    - os
+    - distribution
+    - version
+    - architecture
+    - kernel
+  network:
+    - hostname
+    - domain
+    - ipv4
+    - ipv6
+    - mac
+    - vlan
+    - subnet
+    - gateway
+    - dns
+  applications:
+    - application
+    - service
+    - version
+    - language
+    - runtime
+    - port
+    - database
+  containers:
+    - image
+    - tag
+    - registry
+    - compose-project
+    - namespace
+  kubernetes:
+    - namespace
+    - cluster
+    - nodepool
+    - ingress
+    - storage-class
+  monitoring:
+    - prometheus
+    - grafana
+    - logging
+    - alerts
+    - healthcheck
+  backup:
+    - backup-frequency
+    - backup-location
+    - retention
+    - restore-tested
+  misc:
+    - criticality
+    - priority
+    - maintenance-window
+    - notes

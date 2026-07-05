@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — NamingTool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'naming/css/style.css' %}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6, #06b6d4);
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-brand-icon {
+            font-size: 2.5rem;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .login-brand-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.03em;
+        }
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        .login-form .form-group { margin-bottom: 1.25rem; }
+        .login-form .btn-primary {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+        .login-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 1rem;
+            margin-bottom: 1.25rem;
+            color: var(--danger);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="login-card">
+        <div class="login-brand">
+            <span class="login-brand-icon">⬡</span>
+            <span class="login-brand-text">NamingTool</span>
+            <p class="login-subtitle">Sign in to continue</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="login-error">
+            Invalid username or password.
+        </div>
+        {% endif %}
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" class="form-input" autofocus required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+    </div>
+</body>
+</html>

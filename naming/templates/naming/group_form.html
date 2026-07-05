@@ -1,0 +1,38 @@
+{% extends "naming/base.html" %}
+{% block title %}{{ title }} — NamingTool{% endblock %}
+{% block nav_groups %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+</div>
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="form-errors">
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="id_name">Group Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_color">Color</label>
+                {{ form.color }}
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 1.25rem;">
+            <label class="form-label" for="id_description">Description <span class="text-muted">(optional)</span></label>
+            {{ form.description }}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'group_list' %}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

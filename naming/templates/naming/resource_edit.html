@@ -1,0 +1,59 @@
+{% extends "naming/base.html" %}
+{% block title %}Edit {{ resource.name }} — NamingTool{% endblock %}
+{% block nav_list %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Edit Resource</h1>
+    <p class="page-subtitle"><code>{{ resource.name }}</code></p>
+</div>
+<div class="preview-card" id="namePreview">
+    <span class="preview-label">Preview</span>
+    <code class="preview-name" id="previewName">{{ resource.name }}</code>
+</div>
+<div class="card">
+    <form method="post" id="resourceForm">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-errors">{% for error in form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+        <div class="form-grid">
+            <div class="form-group form-group-full"><label class="form-label">Resource Group</label>{{ form.group }}</div>
+            <div class="form-group"><label class="form-label">Owner</label>{{ form.owner }}{{ form.owner_custom }}</div>
+            <div class="form-group"><label class="form-label">Provider</label>{{ form.provider }}{{ form.provider_custom }}</div>
+            <div class="form-group"><label class="form-label">Environment</label>{{ form.environment }}{{ form.environment_custom }}</div>
+            <div class="form-group"><label class="form-label">Resource Type</label>{{ form.resource_type }}{{ form.resource_type_custom }}</div>
+            <div class="form-group"><label class="form-label">Purpose</label>{{ form.purpose }}{{ form.purpose_custom }}</div>
+            <div class="form-group"><label class="form-label">Instance</label>{{ form.instance }}</div>
+        </div>
+        <div class="form-group" style="margin-top:1.5rem;">
+            <label class="form-label">Tags</label>
+            <div class="tags-editor" id="tagsEditor">
+                <div class="tags-list" id="tagsList"></div>
+                <div class="tag-input-row">
+                    <input type="text" class="form-input tag-key-input" id="tagKeyInput" placeholder="key" list="tagKeySuggestions">
+                    <span class="tag-separator">:</span>
+                    <input type="text" class="form-input tag-value-input" id="tagValueInput" placeholder="value">
+                    <button type="button" class="btn btn-ghost btn-xs" id="addTagBtn">+ Add</button>
+                </div>
+                <datalist id="tagKeySuggestions">
+                    {% for category, keys in tag_suggestions.items %}{% for key in keys %}<option value="{{ key }}">{% endfor %}{% endfor %}
+                </datalist>
+            </div>
+            <input type="hidden" name="tags_json" id="tagsJson" value='{{ existing_tags_json }}'>
+        </div>
+        <div class="form-group" style="margin-top:1.5rem;">
+            <label class="form-label">Notes</label>{{ form.notes }}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{% url 'resource_detail' resource.pk %}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    window.TAG_SUGGESTIONS = {{ tag_suggestions|safe }};
+    window.EXISTING_TAGS = {{ existing_tags_json|safe }};
+</script>
+{% endblock %}
