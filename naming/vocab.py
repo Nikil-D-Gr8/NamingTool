@@ -124,4 +124,4 @@ def get_tag_suggestions(path: Path | None = None) -> TagSuggestions:
         path: Override path for testing.
     """
     data = _load_raw(path)
-    return data.get("tags", {}) # type: ignore[no-any-return]
+    return data.get("tags", {})  # type: ignore[no-any-return]

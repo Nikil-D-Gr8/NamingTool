@@ -34,6 +34,3 @@ class TestURLReversal:
     def test_nonexistent_name_raises(self) -> None:
         with pytest.raises(NoReverseMatch):
             reverse("nonexistent_view")
-
-
-
