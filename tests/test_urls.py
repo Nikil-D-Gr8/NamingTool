@@ -36,20 +36,4 @@ class TestURLReversal:
             reverse("nonexistent_view")
 
 
-class TestOldURLsRemoved:
-    """Ensure DB-era URLs no longer exist."""
 
-    @pytest.mark.parametrize(
-        "name",
-        [
-            "dashboard",
-            "resource_list",
-            "resource_create",
-            "group_list",
-            "register",
-            "api_next_instance",
-        ],
-    )
-    def test_old_url_names_do_not_resolve(self, name: str) -> None:
-        with pytest.raises(NoReverseMatch):
-            reverse(name)

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 
 import pytest
-from django.test import Client, RequestFactory
+from django.test import Client
 from django.urls import reverse
 
 from naming.vocab import get_vocab, save_vocab
@@ -123,8 +122,10 @@ class TestVocabularyManagePostFlat:
 
     def test_add_flat_owner_entry(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "owner", "code": "tst", "label": "TestOwner"},
@@ -135,8 +136,10 @@ class TestVocabularyManagePostFlat:
 
     def test_add_provider_entry(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "provider", "code": "vlt", "label": "Vultr"},
@@ -147,8 +150,10 @@ class TestVocabularyManagePostFlat:
 
     def test_code_is_lowercased(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             client.post(
                 reverse("vocabulary_manage"),
                 {"field": "owner", "code": "TST", "label": "TestOwner"},
@@ -160,8 +165,10 @@ class TestVocabularyManagePostFlat:
     def test_empty_code_does_not_save(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
         original = get_vocab(dest)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "owner", "code": "", "label": "NoCode"},
@@ -174,8 +181,10 @@ class TestVocabularyManagePostFlat:
     def test_empty_label_does_not_save(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
         original = get_vocab(dest)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "owner", "code": "xyz", "label": ""},
@@ -186,9 +195,10 @@ class TestVocabularyManagePostFlat:
 
     def test_cannot_write_to_tags_field(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        original_tags = get_vocab(dest)["tags"]
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             client.post(
                 reverse("vocabulary_manage"),
                 {"field": "tags", "code": "hack", "label": "Hacked"},
@@ -205,8 +215,10 @@ class TestVocabularyManagePostPurpose:
 
     def test_add_purpose_to_existing_category(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "purpose", "code": "proxy", "label": "Proxy", "category": "infrastructure"},
@@ -217,8 +229,10 @@ class TestVocabularyManagePostPurpose:
 
     def test_add_purpose_creates_new_category(self, client: Client, tmp_path: Path) -> None:
         dest = _patch_vocab(tmp_path)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "purpose", "code": "mc", "label": "Minecraft", "category": "gaming"},
@@ -232,8 +246,10 @@ class TestVocabularyManagePostPurpose:
         """Purpose entries require a category — without it, nothing should be saved."""
         dest = _patch_vocab(tmp_path)
         original = get_vocab(dest)
-        with patch("naming.views.get_vocab", lambda: get_vocab(dest)), \
-             patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)):
+        with (
+            patch("naming.views.get_vocab", lambda: get_vocab(dest)),
+            patch("naming.views.save_vocab", lambda data: save_vocab(data, dest)),
+        ):
             response = client.post(
                 reverse("vocabulary_manage"),
                 {"field": "purpose", "code": "test", "label": "Test", "category": ""},

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 from naming.templatetags.naming_tags import get_field
 
 
@@ -38,8 +36,6 @@ class TestGetFieldFilter:
         assert result["infra"]["core"] == "Core"
 
     def test_works_with_list_values(self) -> None:
-        vocab: dict[str, Any] = {
-            "tags": {"ownership": ["owner", "team"]}
-        }
+        vocab: dict[str, Any] = {"tags": {"ownership": ["owner", "team"]}}
         result = get_field(vocab, "tags")
         assert result["ownership"] == ["owner", "team"]

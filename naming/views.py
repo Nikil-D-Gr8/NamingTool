@@ -46,15 +46,20 @@ def vocabulary_manage(request: HttpRequest) -> HttpResponse | HttpResponseRedire
         label: str = request.POST.get("label", "").strip()
         category: str = request.POST.get("category", "").strip().lower()
 
+        changed: bool = False
         if field and code and label:
             if field == "purpose" and category:
                 if category not in vocab.get("purpose", {}):
                     vocab["purpose"][category] = {}
                 vocab["purpose"][category][code] = label
+                changed = True
             elif field in vocab and field not in ("purpose", "tags"):
                 vocab[field][code] = label
-            save_vocab(vocab)
-            return redirect("vocabulary_manage")
+                changed = True
+
+            if changed:
+                save_vocab(vocab)
+                return redirect("vocabulary_manage")
 
     field_list: list[tuple[str, str]] = [
         ("owner", "Owners"),

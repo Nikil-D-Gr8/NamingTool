@@ -29,7 +29,7 @@ def _load_raw(path: Path | None = None) -> VocabDict:
         path: Override path for testing. Falls back to :data:`VOCAB_PATH`.
     """
     target = path or VOCAB_PATH
-    with open(target, "r") as fh:
+    with open(target) as fh:
         data: VocabDict = yaml.safe_load(fh)
     return data
 
@@ -124,4 +124,4 @@ def get_tag_suggestions(path: Path | None = None) -> TagSuggestions:
         path: Override path for testing.
     """
     data = _load_raw(path)
-    return data.get("tags", {})
+    return data.get("tags", {}) # type: ignore[no-any-return]

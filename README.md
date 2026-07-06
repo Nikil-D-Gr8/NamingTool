@@ -1,6 +1,6 @@
 # NamingTool
 
-A stateless, YAML-driven resource naming and tag-building utility. Designed to complement [NetBox](https://netbox.dev/) — generate canonical names and copy-paste tags without any database.
+A stateless, YAML-driven resource naming and tag-building utility. Designed to complement [NetBox](https://netbox.dev/) — generate canonical names and copy-paste tags effortlessly.
 
 ## Naming Convention
 
@@ -16,7 +16,7 @@ A stateless, YAML-driven resource naming and tag-building utility. Designed to c
 - **Tags Builder** — Add key:value tags and export them as `key: value`, JSON, YAML, or CSV for pasting into NetBox.
 - **Dynamic Vocabulary** — All dropdown options are driven by `naming/vocabulary.yaml`. Edit the file or use the in-app Vocabulary page — no migrations, no restarts.
 - **Name History** — Recently copied names are saved in your browser's `localStorage` for quick reference.
-- **Fully Stateless** — No database, no authentication, no server-side state. Just a utility you run locally.
+- **Fully Stateless** — No authentication, no server-side state. Just a utility you run locally.
 
 ## Quick Start
 
@@ -109,7 +109,7 @@ NamingTool/
 
 - **Backend:** Django 6 (Python 3.11+)
 - **Frontend:** HTML, Vanilla JS, Custom CSS (dark mode, glassmorphism)
-- **Data:** YAML (no database)
+- **Data:** YAML
 - **Testing:** pytest + pytest-django + pytest-cov
 - **Linting:** Ruff
 - **Types:** mypy + django-stubs
