@@ -1,2 +1,4 @@
+# Runtime dependencies — kept for simple `pip install -r` workflows.
+# Canonical source of truth is pyproject.toml.
 django>=5.0,<7.0
 pyyaml>=6.0

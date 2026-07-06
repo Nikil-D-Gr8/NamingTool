@@ -3,7 +3,7 @@
 # ============================================================
 # Edit this file to add/remove options from the dropdowns.
 # After editing, restart the Django server (or reload the page)
-# to see the changes — no migrations needed.
+# to see the changes.
 # ============================================================
 
 owner:
