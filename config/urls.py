@@ -1,8 +1,9 @@
-"""
-URL configuration for NamingTool project.
-"""
-from django.urls import include, path
+"""URL routing for the NamingTool project."""
 
-urlpatterns = [
-    path('', include('naming.urls')),
+from __future__ import annotations
+
+from django.urls import URLPattern, URLResolver, include, path
+
+urlpatterns: list[URLPattern | URLResolver] = [
+    path("", include("naming.urls")),
 ]

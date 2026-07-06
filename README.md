@@ -1,83 +1,119 @@
 # NamingTool
 
-A modern, Django-based internal tool for generating, tracking, and managing canonical resource identities across your infrastructure.
+A stateless, YAML-driven resource naming and tag-building utility. Designed to complement [NetBox](https://netbox.dev/) — generate canonical names and copy-paste tags without any database.
 
-NamingTool helps enforce a consistent naming convention:
-`<owner>-<provider>-<environment>-<resource-type>-<purpose>-<instance>`
-*(e.g., `ops-aws-prd-vm-web-001`)*
+## Naming Convention
+
+```
+<owner>-<provider>-<environment>-<resource_type>-<purpose>-<instance>
+```
+
+*Example:* `nik-hom-prd-vm-core-001`
 
 ## Features
 
-- **Canonical Naming:** Enforces strict naming conventions for infrastructure resources.
-- **Resource Groups:** Organize related resources logically (e.g., "Core Network", "Blog Stack").
-- **Dynamic Vocabulary:** Dropdown options are fully configurable via a `vocabulary.yaml` file, editable directly from the UI.
-- **Auto-Instance Detection:** Automatically detects and suggests the next available instance number for a given configuration.
-- **Tagging & Metadata:** Add key-value tags and rich notes to any resource.
+- **Name Generator** — Pick identity fields from dropdowns, see the canonical name in real time, and copy it to your clipboard.
+- **Tags Builder** — Add key:value tags and export them as `key: value`, JSON, YAML, or CSV for pasting into NetBox.
+- **Dynamic Vocabulary** — All dropdown options are driven by `naming/vocabulary.yaml`. Edit the file or use the in-app Vocabulary page — no migrations, no restarts.
+- **Name History** — Recently copied names are saved in your browser's `localStorage` for quick reference.
+- **Fully Stateless** — No database, no authentication, no server-side state. Just a utility you run locally.
 
-## Installation & Setup
+## Quick Start
 
-1. **Clone the repository and enter the directory:**
-   ```bash
-   git clone <repo-url>
-   cd NamingTool
-   ```
+```bash
+# Clone and enter the directory
+git clone https://github.com/Nikil-D-Gr8/NamingTool.git
+cd NamingTool
 
-2. **Create and activate a virtual environment:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+# Create a virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Install dependencies
+pip install -e ".[dev]"
 
-4. **Run database migrations:**
-   ```bash
-   python manage.py migrate
-   ```
+# Run the dev server
+python manage.py runserver
+```
 
-5. **Create an admin user:**
-   ```bash
-   python manage.py createsuperuser
-   ```
+Open [http://localhost:8000/](http://localhost:8000/) and start generating names.
 
-6. **Run the development server:**
-   ```bash
-   python manage.py runserver
-   ```
-   Access the application at `http://localhost:8000/` and log in with your superuser credentials.
+## Development
 
-## Usage Guide
+### Running Tests
 
-### 1. Dashboard
-The dashboard provides a high-level overview of your tracked resources, breakdown by environment and resource type, and quick access to recently created resources.
+```bash
+pytest
+```
 
-### 2. Managing Vocabulary
-Navigate to **Vocabulary** in the sidebar. This allows you to define the available options for:
-- Owners (e.g., `ops`, `dev`)
-- Providers (e.g., `aws`, `hom`)
-- Environments (e.g., `prd`, `dev`)
-- Resource Types (e.g., `vm`, `net`)
-- Purposes (e.g., `db`, `web`)
+With coverage:
 
-These values populate the dropdowns when creating a new resource. *(Note: You can also use the "✏️ Custom…" option while creating a resource if you need an on-the-fly value).*
+```bash
+pytest --cov
+```
 
-### 3. Resource Groups
-Navigate to **Groups** to create logical collections for your resources.
-- Create a group (e.g., "Database Cluster").
-- Assign a custom color to the group for easy visual identification.
+### Linting & Formatting
 
-### 4. Creating Resources
-Navigate to **Create**.
-1. Select a **Resource Group**.
-2. Pick your identity fields (Owner, Provider, Environment, Resource Type, Purpose).
-3. Click the **Auto** button next to the Instance field to automatically fetch the next available number (e.g., `001`, `002`).
-4. (Optional) Add key-value tags and notes.
-5. The canonical name is automatically previewed at the top. Click **Create Resource** to save.
+```bash
+ruff check .
+ruff format .
+```
+
+### Type Checking
+
+```bash
+mypy naming/
+```
+
+## Project Structure
+
+```
+NamingTool/
+├── config/              # Django project settings & URL root
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── naming/              # Main Django app
+│   ├── apps.py
+│   ├── urls.py
+│   ├── views.py         # home + vocabulary_manage
+│   ├── vocab.py         # YAML loader & choice builders
+│   ├── vocabulary.yaml  # All dropdown data (edit freely)
+│   ├── templatetags/
+│   │   └── naming_tags.py
+│   ├── templates/naming/
+│   │   ├── base.html
+│   │   ├── home.html
+│   │   └── vocabulary.html
+│   └── static/naming/
+│       ├── css/style.css
+│       └── js/app.js
+├── tests/               # pytest test suite
+│   ├── conftest.py
+│   ├── fixtures/
+│   │   └── test_vocabulary.yaml
+│   ├── test_vocab.py
+│   ├── test_views.py
+│   ├── test_urls.py
+│   ├── test_templatetags.py
+│   └── test_app.py
+├── pyproject.toml       # Project metadata, deps, tool configs
+├── requirements.txt     # Pinned runtime deps (for simple installs)
+├── manage.py
+├── LICENSE
+└── README.md
+```
 
 ## Tech Stack
-- **Backend:** Django (Python)
-- **Database:** SQLite (default)
-- **Frontend:** HTML, Vanilla JS, Custom CSS (Glassmorphism design)
+
+- **Backend:** Django 6 (Python 3.11+)
+- **Frontend:** HTML, Vanilla JS, Custom CSS (dark mode, glassmorphism)
+- **Data:** YAML (no database)
+- **Testing:** pytest + pytest-django + pytest-cov
+- **Linting:** Ruff
+- **Types:** mypy + django-stubs
+
+## License
+
+MIT — see [LICENSE](LICENSE).

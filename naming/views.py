@@ -1,11 +1,30 @@
-from django.shortcuts import render, redirect
-from .vocab import get_vocab, get_choices, get_purpose_flat, get_tag_suggestions, save_vocab
+"""
+Views for the NamingTool — a stateless name generator and tag builder.
+
+Only two views:
+
+* **home** — renders the name-generator + tag-builder page.
+* **vocabulary_manage** — lets users browse and extend the YAML vocabulary.
+"""
+
+from __future__ import annotations
+
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect, render
+
+from .vocab import (
+    get_choices,
+    get_purpose_flat,
+    get_tag_suggestions,
+    get_vocab,
+    save_vocab,
+)
 
 
-def home(request):
+def home(request: HttpRequest) -> HttpResponse:
     """Main page — name generator + tags copy-paster."""
     vocab = get_vocab()
-    context = {
+    context: dict[str, object] = {
         "vocab": vocab,
         "owner_choices": get_choices("owner"),
         "provider_choices": get_choices("provider"),
@@ -17,32 +36,32 @@ def home(request):
     return render(request, "naming/home.html", context)
 
 
-def vocabulary_manage(request):
-    """View and add new vocabulary entries."""
+def vocabulary_manage(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
+    """View and add new vocabulary entries via POST, or browse them via GET."""
     vocab = get_vocab()
 
     if request.method == "POST":
-        field = request.POST.get("field", "")
-        code = request.POST.get("code", "").strip().lower()
-        label = request.POST.get("label", "").strip()
-        category = request.POST.get("category", "").strip().lower()
+        field: str = request.POST.get("field", "")
+        code: str = request.POST.get("code", "").strip().lower()
+        label: str = request.POST.get("label", "").strip()
+        category: str = request.POST.get("category", "").strip().lower()
 
         if field and code and label:
             if field == "purpose" and category:
                 if category not in vocab.get("purpose", {}):
                     vocab["purpose"][category] = {}
                 vocab["purpose"][category][code] = label
-            elif field in vocab and field != "purpose" and field != "tags":
+            elif field in vocab and field not in ("purpose", "tags"):
                 vocab[field][code] = label
             save_vocab(vocab)
             return redirect("vocabulary_manage")
 
-    field_list = [
+    field_list: list[tuple[str, str]] = [
         ("owner", "Owners"),
         ("provider", "Providers"),
         ("environment", "Environments"),
         ("resource_type", "Resource Types"),
         ("purpose", "Purposes"),
     ]
-    context = {"vocab": vocab, "field_list": field_list}
+    context: dict[str, object] = {"vocab": vocab, "field_list": field_list}
     return render(request, "naming/vocabulary.html", context)
