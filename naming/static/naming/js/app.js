@@ -3,134 +3,22 @@
  *
  * - Live name preview as form fields change
  * - Custom field toggle (show text input when "Custom" is selected)
- * - Tag editor
- * - Auto-instance detection
- * - Form persistence via localStorage
+ * - Tag editor with multiple export formats
+ * - Copy to clipboard (name + tags)
+ * - Name history via localStorage
  */
 
-const STORAGE_KEY = 'namingtool_create_draft';
+const HISTORY_KEY = 'namingtool_history';
+const MAX_HISTORY = 20;
 
 document.addEventListener('DOMContentLoaded', () => {
-    initFormPersistence();   // must run before preview so restored values are visible
     initNamePreview();
     initCustomFields();
     initTagEditor();
-    initAutoInstance();
+    initCopyName();
+    initCopyTags();
+    initHistory();
 });
-
-/* -------------------------------------------------------
-   Form Persistence (localStorage)
-   Saves all create-form state so navigating away doesn't
-   lose your selections. Cleared on successful submit.
-   Only active on the create page (not edit).
-   ------------------------------------------------------- */
-function initFormPersistence() {
-    const form = document.getElementById('resourceForm');
-    if (!form) return;
-
-    // Only persist on the create page, not edit (edit has a resource object)
-    const isCreatePage = window.location.pathname.includes('/new');
-    if (!isCreatePage) return;
-
-    const fields = ['owner', 'provider', 'environment', 'resource_type', 'purpose'];
-    const instanceInput = document.getElementById('id_instance');
-    const notesInput = document.getElementById('id_notes');
-
-    // --- Restore saved draft ---
-    const saved = _loadDraft();
-    if (saved) {
-        // Restore select dropdowns
-        fields.forEach(f => {
-            const select = document.getElementById('id_' + f);
-            const custom = document.getElementById('id_' + f + '_custom');
-            if (select && saved[f] !== undefined) {
-                select.value = saved[f];
-                // If the saved value doesn't match any option, it was custom
-                if (select.value !== saved[f]) {
-                    select.value = '__custom__';
-                }
-            }
-            if (custom && saved[f + '_custom']) {
-                custom.value = saved[f + '_custom'];
-            }
-        });
-        // Restore groups (multi-select)
-        const groupsSelect = document.getElementById('id_groups');
-        if (groupsSelect && saved.groups && Array.isArray(saved.groups)) {
-            Array.from(groupsSelect.options).forEach(opt => {
-                opt.selected = saved.groups.includes(opt.value);
-            });
-        }
-        // Restore instance
-        if (instanceInput && saved.instance) {
-            instanceInput.value = saved.instance;
-        }
-        // Restore notes
-        if (notesInput && saved.notes) {
-            notesInput.value = saved.notes;
-        }
-        // Restore tags
-        if (saved.tags) {
-            const tagsJson = document.getElementById('tagsJson');
-            if (tagsJson) {
-                tagsJson.value = JSON.stringify(saved.tags);
-            }
-        }
-    }
-
-    // --- Save on every change ---
-    function saveDraft() {
-        const draft = {};
-        const groupsSelect = document.getElementById('id_groups');
-        if (groupsSelect) {
-            draft.groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
-        }
-        
-        fields.forEach(f => {
-            const select = document.getElementById('id_' + f);
-            const custom = document.getElementById('id_' + f + '_custom');
-            if (select) draft[f] = select.value;
-            if (custom) draft[f + '_custom'] = custom.value;
-        });
-        if (instanceInput) draft.instance = instanceInput.value;
-        if (notesInput) draft.notes = notesInput.value;
-
-        // Tags
-        const tagsJson = document.getElementById('tagsJson');
-        if (tagsJson) {
-            try { draft.tags = JSON.parse(tagsJson.value); } catch(e) { draft.tags = {}; }
-        }
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-    }
-
-    // Listen on all inputs
-    const groupsSelect = document.getElementById('id_groups');
-    if (groupsSelect) groupsSelect.addEventListener('change', saveDraft);
-    fields.forEach(f => {
-        const select = document.getElementById('id_' + f);
-        const custom = document.getElementById('id_' + f + '_custom');
-        if (select) select.addEventListener('change', saveDraft);
-        if (custom) custom.addEventListener('input', saveDraft);
-    });
-    if (instanceInput) instanceInput.addEventListener('input', saveDraft);
-    if (notesInput) notesInput.addEventListener('input', saveDraft);
-
-    // Listen for tag changes (dispatched by tag editor)
-    document.addEventListener('tags-changed', saveDraft);
-
-    // --- Clear draft on successful submit ---
-    form.addEventListener('submit', () => {
-        localStorage.removeItem(STORAGE_KEY);
-    });
-}
-
-function _loadDraft() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch(e) { return null; }
-}
 
 /* -------------------------------------------------------
    Live Name Preview
@@ -160,7 +48,6 @@ function initNamePreview() {
         previewEl.textContent = parts.join('-');
     }
 
-    // Listen to all relevant inputs
     fields.forEach(f => {
         const select = document.getElementById('id_' + f);
         const custom = document.getElementById('id_' + f + '_custom');
@@ -194,7 +81,6 @@ function initCustomFields() {
         }
 
         select.addEventListener('change', toggle);
-        // Initialize on page load (for edit forms where __custom__ might be pre-selected)
         toggle();
     });
 }
@@ -202,23 +88,22 @@ function initCustomFields() {
 /* -------------------------------------------------------
    Tag Editor
    ------------------------------------------------------- */
+let currentTags = {};
+
 function initTagEditor() {
     const tagsList = document.getElementById('tagsList');
-    const tagsJson = document.getElementById('tagsJson');
     const keyInput = document.getElementById('tagKeyInput');
     const valueInput = document.getElementById('tagValueInput');
     const addBtn = document.getElementById('addTagBtn');
-    if (!tagsList || !tagsJson) return;
-
-    // Load existing tags
-    let tags = {};
-    try {
-        tags = JSON.parse(tagsJson.value) || {};
-    } catch(e) { tags = {}; }
+    if (!tagsList) return;
 
     function render() {
         tagsList.innerHTML = '';
-        Object.entries(tags).forEach(([k, v]) => {
+        const entries = Object.entries(currentTags);
+        if (entries.length === 0) {
+            tagsList.innerHTML = '<span class="text-muted" style="font-size:0.8rem;">No tags added yet</span>';
+        }
+        entries.forEach(([k, v]) => {
             const chip = document.createElement('div');
             chip.className = 'tag-chip';
             chip.innerHTML = `
@@ -228,15 +113,14 @@ function initTagEditor() {
             `;
             tagsList.appendChild(chip);
         });
-        tagsJson.value = JSON.stringify(tags);
-        document.dispatchEvent(new CustomEvent('tags-changed'));
+        updateTagsPreview();
     }
 
     function addTag() {
         const k = keyInput.value.trim();
         const v = valueInput.value.trim();
         if (!k) return;
-        tags[k] = v;
+        currentTags[k] = v;
         keyInput.value = '';
         valueInput.value = '';
         render();
@@ -245,19 +129,22 @@ function initTagEditor() {
 
     if (addBtn) addBtn.addEventListener('click', addTag);
 
-    // Enter key in value input adds tag
     if (valueInput) {
         valueInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); addTag(); }
         });
     }
+    if (keyInput) {
+        keyInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); valueInput.focus(); }
+        });
+    }
 
-    // Remove tag
     tagsList.addEventListener('click', e => {
         const btn = e.target.closest('.tag-chip-remove');
         if (btn) {
             const key = btn.getAttribute('data-key');
-            delete tags[key];
+            delete currentTags[key];
             render();
         }
     });
@@ -266,33 +153,160 @@ function initTagEditor() {
 }
 
 /* -------------------------------------------------------
-   Auto Instance Detection
+   Tags Preview & Export Formats
    ------------------------------------------------------- */
-function initAutoInstance() {
-    const btn = document.getElementById('autoInstanceBtn');
+function getSelectedFormat() {
+    const radio = document.querySelector('input[name="tagFormat"]:checked');
+    return radio ? radio.value : 'kv';
+}
+
+function formatTags(format) {
+    const entries = Object.entries(currentTags);
+    if (entries.length === 0) return '';
+
+    switch (format) {
+        case 'json':
+            return JSON.stringify(currentTags, null, 2);
+        case 'yaml':
+            return entries.map(([k, v]) => `${k}: ${v}`).join('\n');
+        case 'csv':
+            return 'key,value\n' + entries.map(([k, v]) => `${k},${v}`).join('\n');
+        case 'kv':
+        default:
+            return entries.map(([k, v]) => `${k}: ${v}`).join('\n');
+    }
+}
+
+function updateTagsPreview() {
+    const previewCard = document.getElementById('tagsPreviewCard');
+    const previewText = document.getElementById('tagsPreviewText');
+    if (!previewCard || !previewText) return;
+
+    const entries = Object.entries(currentTags);
+    if (entries.length === 0) {
+        previewCard.style.display = 'none';
+        return;
+    }
+
+    previewCard.style.display = 'block';
+    previewText.textContent = formatTags(getSelectedFormat());
+}
+
+// Update preview when format changes
+document.addEventListener('change', e => {
+    if (e.target.name === 'tagFormat') {
+        updateTagsPreview();
+    }
+});
+
+/* -------------------------------------------------------
+   Copy Name
+   ------------------------------------------------------- */
+function initCopyName() {
+    const btn = document.getElementById('copyNameBtn');
     if (!btn) return;
 
     btn.addEventListener('click', () => {
-        const params = new URLSearchParams();
-        ['owner', 'provider', 'environment', 'resource_type', 'purpose'].forEach(f => {
-            const select = document.getElementById('id_' + f);
-            const custom = document.getElementById('id_' + f + '_custom');
-            let val = select ? select.value : '';
-            if (val === '__custom__' && custom) val = custom.value.trim().toLowerCase();
-            params.set(f, val);
-        });
+        const name = document.getElementById('previewName').textContent;
+        if (!name || name.includes('‹')) return;
 
-        fetch('/api/next-instance/?' + params.toString())
-            .then(r => r.json())
-            .then(data => {
-                const inst = document.getElementById('id_instance');
-                if (inst && data.next_instance) {
-                    inst.value = data.next_instance;
-                    inst.dispatchEvent(new Event('input'));
-                }
-            })
-            .catch(() => {});
+        copyToClipboard(name);
+        flashButton(btn, 'Copied!');
+        addToHistory(name);
     });
+}
+
+/* -------------------------------------------------------
+   Copy Tags
+   ------------------------------------------------------- */
+function initCopyTags() {
+    const btn = document.getElementById('copyTagsBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+        const text = formatTags(getSelectedFormat());
+        if (!text) return;
+
+        copyToClipboard(text);
+        flashButton(btn, 'Copied!');
+    });
+}
+
+/* -------------------------------------------------------
+   Name History (localStorage)
+   ------------------------------------------------------- */
+function initHistory() {
+    const list = document.getElementById('historyList');
+    const clearBtn = document.getElementById('clearHistoryBtn');
+    if (!list) return;
+
+    function render() {
+        const history = loadHistory();
+        if (history.length === 0) {
+            list.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p class="text-muted">Names you copy will appear here.</p></div>';
+            return;
+        }
+
+        list.innerHTML = '';
+        history.forEach((entry, i) => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <code class="resource-name">${escapeHtml(entry.name)}</code>
+                <span class="text-muted history-time">${timeAgo(entry.timestamp)}</span>
+                <button type="button" class="btn btn-ghost btn-xs history-copy-btn" data-name="${escapeHtml(entry.name)}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    list.addEventListener('click', e => {
+        const btn = e.target.closest('.history-copy-btn');
+        if (btn) {
+            copyToClipboard(btn.dataset.name);
+            flashButton(btn, '✓');
+        }
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            localStorage.removeItem(HISTORY_KEY);
+            render();
+        });
+    }
+
+    // Expose render so addToHistory can call it
+    window._renderHistory = render;
+    render();
+}
+
+function addToHistory(name) {
+    let history = loadHistory();
+    // Avoid duplicates at the top
+    history = history.filter(h => h.name !== name);
+    history.unshift({ name, timestamp: Date.now() });
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    if (window._renderHistory) window._renderHistory();
+}
+
+function loadHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch (e) { return []; }
+}
+
+function timeAgo(ts) {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
 }
 
 /* -------------------------------------------------------
@@ -302,4 +316,30 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+    } else {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+}
+
+function flashButton(btn, text) {
+    const original = btn.innerHTML;
+    btn.innerHTML = `<span style="color: var(--success);">${text}</span>`;
+    btn.classList.add('copied');
+    setTimeout(() => {
+        btn.innerHTML = original;
+        btn.classList.remove('copied');
+    }, 1500);
 }
