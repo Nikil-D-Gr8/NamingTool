@@ -1,7 +1,7 @@
 /* ============================================================
    NamingTool — Design System
    Dark mode, glassmorphism, Inter font
-   Stateless name generator & tag builder
+   Pure static name generator & tag builder
    ============================================================ */
 
 /* --- Reset & Base --- */
@@ -87,6 +87,7 @@ code { font-family: var(--mono); }
     font-size: 0.9rem; font-weight: 500;
     transition: all var(--transition);
     border-left: 3px solid transparent;
+    cursor: pointer;
 }
 .nav-link:hover { color: var(--text); background: rgba(59,130,246,0.06); }
 .nav-link.active {
@@ -112,6 +113,10 @@ code { font-family: var(--mono); }
     position: relative; z-index: 1;
     max-width: 1400px;
 }
+
+/* --- Page views --- */
+.page-view { display: none; }
+.page-view.active { display: block; }
 
 /* --- Typography --- */
 h1 { font-size: 2rem; font-weight: 700; color: var(--text-heading); letter-spacing: -0.03em; }
@@ -202,7 +207,6 @@ h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-heading); }
 }
 .form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
 .form-select option { background: var(--bg-surface); color: var(--text); }
-.form-select-sm { padding: 0.45rem 0.6rem; font-size: 0.85rem; }
 
 .custom-input { display: none; margin-top: 0.4rem; }
 .custom-input.visible { display: block; }
@@ -232,7 +236,6 @@ h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-heading); }
 .tag-separator { color: var(--text-muted); font-weight: 600; }
 
 /* --- Tag Format Selector --- */
-.tag-format-row { }
 .format-options {
     display: flex; gap: 0.5rem; flex-wrap: wrap;
 }
@@ -326,7 +329,28 @@ h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-heading); }
 .vocab-code { font-family: var(--mono); font-weight: 600; color: var(--cyan); }
 .vocab-category { width: 100%; margin-bottom: 0.5rem; }
 .vocab-cat-title { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: capitalize; }
+
+/* --- Vocab Add Form --- */
 .vocab-add-form .form-grid { align-items: end; }
+.vocab-status {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-xs);
+    display: none;
+}
+.vocab-status.success {
+    display: block;
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.vocab-status.error {
+    display: block;
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
 /* --- Empty State --- */
 .empty-state {
